@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveCultr — Email Signature Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px 80px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    header svg { flex-shrink: 0; }
+    header h1 {
+      font-size: 16px;
+      font-weight: 500;
+      color: #888;
+      letter-spacing: 0.04em;
+    }
+    header h1 span { color: #fff; }
+
+    /* Layout */
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 40px;
+      width: 100%;
+      max-width: 960px;
+    }
+
+    /* Form panel */
+    .panel {
+      background: #181818;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 28px;
+    }
+    .panel h2 {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+    }
+    .field input {
+      width: 100%;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: #e0e0e0;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: #F27866; }
+    .field input::placeholder { color: #3a3a3a; }
+
+    /* Preview panel */
+    .preview-panel { display: flex; flex-direction: column; gap: 20px; }
+    .preview-panel h2 {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #555;
+    }
+
+    .preview-box {
+      background: #1a1a1a;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+
+    /* Copy section */
+    .copy-section { display: flex; flex-direction: column; gap: 10px; }
+    .copy-row { display: flex; gap: 10px; }
+
+    button {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, background 0.15s;
+    }
+    button:active { opacity: 0.7; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #F27866, #FED0AB);
+      color: #1a0a00;
+      flex: 1;
+    }
+    .btn-secondary {
+      background: #222;
+      color: #aaa;
+      border: 1px solid #2a2a2a;
+      flex: 1;
+    }
+    .btn-secondary:hover { background: #2a2a2a; }
+
+    .copy-hint {
+      font-size: 11px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #F27866;
+      color: #1a0000;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 70 86" width="24" height="30" aria-label="LiveCultr" style="color:#fff">
+      <path fill="url(#hgrad)" d="M34.3 85.15c-6.685 0-12.555-1.283-17.608-3.85-4.975-2.643-8.862-6.61-11.66-11.897C2.31 64.115.95 57.428.95 49.34V36.51c0-8.088 1.36-14.775 4.081-20.063 2.799-5.288 6.686-9.215 11.661-11.781C21.745 2.022 27.615.7 34.3.7h1.516C42.58.7 48.45 2.022 53.424 4.666c4.976 2.566 8.824 6.493 11.545 11.78 2.72 5.289 4.081 11.976 4.081 20.064v12.83c0 8.088-1.36 14.775-4.081 20.063-2.721 5.288-6.57 9.254-11.545 11.898-4.975 2.566-10.844 3.849-17.608 3.849H34.3Zm.233-7.582H35.7c7.93 0 14.11-2.255 18.54-6.765 4.51-4.588 6.764-11.742 6.764-21.463V36.51c0-9.72-2.255-16.836-6.764-21.346-4.43-4.588-10.61-6.882-18.54-6.882h-1.167c-8.007 0-14.265 2.294-18.774 6.882-4.43 4.51-6.646 11.625-6.646 21.346v12.83c0 9.72 2.215 16.875 6.646 21.463 4.51 4.51 10.767 6.765 18.774 6.765Z"/>
+      <path fill="currentcolor" d="M25.836 58.663c2.35 2.358 5.522 3.537 9.516 3.537 4.054 0 7.108-1.179 9.164-3.537 2.056-2.358 3.084-5.423 3.084-9.195v-1.68h-6.08v1.857c0 2.357-.558 4.096-1.674 5.216-1.057 1.12-2.585 1.68-4.582 1.68-1.82 0-3.407-.59-4.758-1.768-1.35-1.18-2.026-2.918-2.026-5.217V36.647c0-2.416.646-4.244 1.938-5.482 1.292-1.296 2.908-1.945 4.846-1.945 2.291 0 3.906.649 4.846 1.945.94 1.297 1.41 2.889 1.41 4.775v2.21h6.08v-1.68c0-3.772-1.057-6.837-3.172-9.195-2.115-2.417-5.199-3.625-9.252-3.625-3.76 0-6.843 1.208-9.252 3.625-2.35 2.417-3.524 5.983-3.524 10.699V48.23c0 4.598 1.145 8.075 3.436 10.433Z"/>
+      <defs>
+        <linearGradient id="hgrad" x1="70.802" x2="40.192" y1=".7" y2="21.051" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#F27866"/><stop offset=".197" stop-color="#F8A489"/><stop offset="1" stop-color="#FED0AB"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <h1><span>LiveCultr</span> — Email Signature Generator</h1>
+  </header>
+
+  <div class="layout">
+
+    <!-- Form -->
+    <div class="panel">
+      <h2>Your Details</h2>
+
+      <div class="field">
+        <label>Full Name</label>
+        <input id="f-name" type="text" value="Eric Sims" placeholder="Jane Smith">
+      </div>
+      <div class="field">
+        <label>Title</label>
+        <input id="f-title" type="text" value="Founder" placeholder="Marketing Manager">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input id="f-email" type="email" value="esims@livecultr.co" placeholder="jane@livecultr.co">
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input id="f-phone" type="tel" value="(737) 408-6436" placeholder="(555) 000-0000">
+      </div>
+      <div class="field">
+        <label>Photo URL</label>
+        <input id="f-photo" type="url" value="https://media.licdn.com/dms/image/v2/D5603AQFXAIaIEtdjrQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1690386845322?e=1773878400&v=beta&t=V56P18OxXMSBj26DWyVhFql6E9lzqQwc1yg-GqGdtOQ" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label>LinkedIn URL</label>
+        <input id="f-linkedin" type="url" value="https://www.linkedin.com/in/esims001/" placeholder="https://linkedin.com/in/...">
+      </div>
+      <div class="field">
+        <label>X (Twitter) URL</label>
+        <input id="f-x" type="url" value="https://x.com/iameazysims" placeholder="https://x.com/...">
+      </div>
+    </div>
+
+    <!-- Preview + copy -->
+    <div class="preview-panel">
+      <h2>Preview</h2>
+
+      <div class="preview-box">
+        <div id="sig-preview"></div>
+      </div>
+
+      <div class="copy-section">
+        <div class="copy-row">
+          <button class="btn-primary" onclick="copyHTML()">Copy Signature HTML</button>
+          <button class="btn-secondary" onclick="copyForGmail()">Copy for Gmail</button>
+        </div>
+        <p class="copy-hint">
+          <strong style="color:#666">Gmail:</strong> Use "Copy for Gmail", then paste into Settings → Signature.<br>
+          <strong style="color:#666">Outlook / Apple Mail:</strong> Use "Copy Signature HTML" and paste into your email client's signature editor in HTML mode.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 70 86" width="22" height="27" aria-label="LiveCultr" style="display:block;color:#ffffff"><path fill="url(#lcsig)" d="M34.3 85.15c-6.685 0-12.555-1.283-17.608-3.85-4.975-2.643-8.862-6.61-11.66-11.897C2.31 64.115.95 57.428.95 49.34V36.51c0-8.088 1.36-14.775 4.081-20.063 2.799-5.288 6.686-9.215 11.661-11.781C21.745 2.022 27.615.7 34.3.7h1.516C42.58.7 48.45 2.022 53.424 4.666c4.976 2.566 8.824 6.493 11.545 11.78 2.72 5.289 4.081 11.976 4.081 20.064v12.83c0 8.088-1.36 14.775-4.081 20.063-2.721 5.288-6.57 9.254-11.545 11.898-4.975 2.566-10.844 3.849-17.608 3.849H34.3Zm.233-7.582H35.7c7.93 0 14.11-2.255 18.54-6.765 4.51-4.588 6.764-11.742 6.764-21.463V36.51c0-9.72-2.255-16.836-6.764-21.346-4.43-4.588-10.61-6.882-18.54-6.882h-1.167c-8.007 0-14.265 2.294-18.774 6.882-4.43 4.51-6.646 11.625-6.646 21.346v12.83c0 9.72 2.215 16.875 6.646 21.463 4.51 4.51 10.767 6.765 18.774 6.765Z"/><path fill="currentcolor" d="M25.836 58.663c2.35 2.358 5.522 3.537 9.516 3.537 4.054 0 7.108-1.179 9.164-3.537 2.056-2.358 3.084-5.423 3.084-9.195v-1.68h-6.08v1.857c0 2.357-.558 4.096-1.674 5.216-1.057 1.12-2.585 1.68-4.582 1.68-1.82 0-3.407-.59-4.758-1.768-1.35-1.18-2.026-2.918-2.026-5.217V36.647c0-2.416.646-4.244 1.938-5.482 1.292-1.296 2.908-1.945 4.846-1.945 2.291 0 3.906.649 4.846 1.945.94 1.297 1.41 2.889 1.41 4.775v2.21h6.08v-1.68c0-3.772-1.057-6.837-3.172-9.195-2.115-2.417-5.199-3.625-9.252-3.625-3.76 0-6.843 1.208-9.252 3.625-2.35 2.417-3.524 5.983-3.524 10.699V48.23c0 4.598 1.145 8.075 3.436 10.433Z"/><defs><linearGradient id="lcsig" x1="70.802" x2="40.192" y1=".7" y2="21.051" gradientUnits="userSpaceOnUse"><stop stop-color="#F27866"/><stop offset=".197" stop-color="#F8A489"/><stop offset="1" stop-color="#FED0AB"/></linearGradient></defs></svg>`;
+
+    // LinkedIn icon (simple SVG path)
+    const LI_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;vertical-align:middle;fill:#666"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`;
+
+    // X icon
+    const X_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;vertical-align:middle;fill:#666"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.63 5.905-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
+
+    function val(id) { return document.getElementById(id).value.trim(); }
+
+    function buildSignatureHTML(forClipboard = false) {
+      const name    = val('f-name')    || 'Your Name';
+      const title   = val('f-title')   || 'Title';
+      const email   = val('f-email')   || '';
+      const phone   = val('f-phone')   || '';
+      const photo   = val('f-photo')   || '';
+      const linkedin = val('f-linkedin') || '';
+      const xurl    = val('f-x')       || '';
+
+      const phoneRow = phone ? `
+            <tr>
+              <td style="font-size:12px;color:#666666;padding-bottom:3px;padding-right:8px;white-space:nowrap;">&#128222;</td>
+              <td style="font-size:12px;padding-bottom:3px;">
+                <a href="tel:${phone.replace(/\D/g,'')}" style="color:#aaaaaa;text-decoration:none;">${phone}</a>
+              </td>
+            </tr>` : '';
+
+      const socialRow = (linkedin || xurl) ? `
+            <tr>
+              <td colspan="2" style="padding-top:6px;">
+                ${linkedin ? `<a href="${linkedin}" style="display:inline-block;margin-right:10px;text-decoration:none;" target="_blank">${LI_ICON}</a>` : ''}
+                ${xurl ? `<a href="${xurl}" style="display:inline-block;text-decoration:none;" target="_blank">${X_ICON}</a>` : ''}
+              </td>
+            </tr>` : '';
+
+      const photoCell = photo
+        ? `<td style="vertical-align:top;padding-right:16px;width:72px;">
+            <img src="${photo}" alt="${name}" width="60" height="60"
+              style="border-radius:50%;display:block;width:60px;height:60px;object-fit:cover;border:2px solid #444444;" />
+          </td>`
+        : '';
+
+      return `<table cellpadding="0" cellspacing="0" border="0" style="background-color:#0a0a0a;border-radius:12px;padding:20px 24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:480px;width:100%;">
+  <tr>
+    ${photoCell}
+    <td style="vertical-align:top;">
+      <p style="margin:0 0 2px 0;font-size:15px;font-weight:600;color:#ffffff;line-height:1.3;">${name}</p>
+      <p style="margin:0 0 10px 0;font-size:12px;color:#888888;line-height:1.4;">${title}&nbsp;&nbsp;·&nbsp;&nbsp;Live Cultr</p>
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-bottom:10px;">
+        <tr><td style="border-top:1px solid #222222;font-size:0;line-height:0;">&nbsp;</td></tr>
+      </table>
+      <table cellpadding="0" cellspacing="0" border="0">
+        ${email ? `<tr>
+          <td style="font-size:12px;color:#666666;padding-bottom:3px;padding-right:8px;">&#9993;</td>
+          <td style="font-size:12px;padding-bottom:3px;">
+            <a href="mailto:${email}" style="color:#aaaaaa;text-decoration:none;">${email}</a>
+          </td>
+        </tr>` : ''}
+        ${phoneRow}
+        <tr>
+          <td style="font-size:12px;color:#666666;padding-right:8px;">&#9737;</td>
+          <td style="font-size:12px;">
+            <a href="https://livecultr.co" style="color:#aaaaaa;text-decoration:none;">livecultr.co</a>
+          </td>
+        </tr>
+        ${socialRow}
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" style="padding-top:16px;">
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+        <tr><td style="border-top:1px solid #1e1e1e;font-size:0;line-height:0;padding-bottom:14px;">&nbsp;</td></tr>
+      </table>
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+        <tr>
+          <td style="vertical-align:middle;">
+            <table cellpadding="0" cellspacing="0" border="0"><tr>
+              <td style="vertical-align:middle;padding-right:8px;">${LOGO_SVG}</td>
+              <td style="vertical-align:middle;">
+                <span style="font-size:13px;font-weight:600;color:#ffffff;letter-spacing:0.01em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">Live Cultr</span>
+              </td>
+            </tr></table>
+          </td>
+          <td style="vertical-align:middle;text-align:right;">
+            <span style="font-size:10px;color:#444444;letter-spacing:0.06em;text-transform:uppercase;">&copy; 2026</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+    }
+
+    function render() {
+      document.getElementById('sig-preview').innerHTML = buildSignatureHTML();
+    }
+
+    // Live update
+    ['f-name','f-title','f-email','f-phone','f-photo','f-linkedin','f-x'].forEach(id => {
+      document.getElementById(id).addEventListener('input', render);
+    });
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2400);
+    }
+
+    async function copyHTML() {
+      const html = buildSignatureHTML(true);
+      try {
+        await navigator.clipboard.writeText(html);
+        showToast('HTML copied to clipboard!');
+      } catch {
+        fallbackCopy(html);
+      }
+    }
+
+    async function copyForGmail() {
+      // Copy the rendered HTML as rich text (so Gmail accepts it as styled content)
+      const html = buildSignatureHTML(true);
+      try {
+        const blob = new Blob([html], { type: 'text/html' });
+        const item = new ClipboardItem({ 'text/html': blob });
+        await navigator.clipboard.write([item]);
+        showToast('Copied! Paste into Gmail signature editor.');
+      } catch {
+        fallbackCopy(html);
+        showToast('Copied HTML — paste into Gmail (HTML mode).');
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>
