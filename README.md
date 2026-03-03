@@ -2,6 +2,9 @@
 
 A lightweight, zero-dependency email signature generator for the LiveCultr brand. Fill in your details, get a live preview, and copy a signature ready to paste into Gmail, Outlook, or Apple Mail.
 
+<img width="2324" height="1524" alt="image" src="https://github.com/user-attachments/assets/da7a20c7-36cd-4a9d-b264-0c4943c7a206" />
+
+
 ## Features
 
 - **Live preview** — signature updates as you type
